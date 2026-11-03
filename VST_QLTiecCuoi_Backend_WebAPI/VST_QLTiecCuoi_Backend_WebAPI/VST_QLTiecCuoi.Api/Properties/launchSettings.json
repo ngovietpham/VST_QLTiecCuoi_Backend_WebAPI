@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "VST_QLTiecCuoi": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "applicationUrl": "http://0.0.0.0:5041",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "launchUrl": "swagger"
+    }
+  }
+}

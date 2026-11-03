@@ -1,0 +1,56 @@
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+namespace VST_QLTiecCuoi.Models;
+public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<User>(options) {
+ public DbSet<VenueLocation> VenueLocations=>Set<VenueLocation>();
+ public DbSet<Hall> Halls=>Set<Hall>();
+ public DbSet<HallTable> HallTables=>Set<HallTable>();
+ public DbSet<Dish> Dishes=>Set<Dish>();
+ public DbSet<Menu> Menus=>Set<Menu>();
+ public DbSet<MenuItem> MenuItems=>Set<MenuItem>();
+ public DbSet<Booking> Bookings=>Set<Booking>();
+ public DbSet<Reservation> Reservations=>Set<Reservation>();
+ public DbSet<EventTable> EventTables=>Set<EventTable>();
+ public DbSet<Guest> Guests=>Set<Guest>();
+ public DbSet<Payment> Payments=>Set<Payment>();
+ public DbSet<AuditLog> AuditLogs=>Set<AuditLog>();
+ public DbSet<WeddingPhoto> WeddingPhotos=>Set<WeddingPhoto>();
+ protected override void OnModelCreating(ModelBuilder b) {
+  base.OnModelCreating(b);
+  b.Entity<VenueLocation>().HasKey(x=>x.HallId);
+  b.Entity<VenueLocation>().HasOne<Hall>().WithOne().HasForeignKey<VenueLocation>(x=>x.HallId).OnDelete(DeleteBehavior.Restrict);
+  b.Entity<Hall>().Property(x=>x.Name).HasMaxLength(100);
+  b.Entity<Dish>().Property(x=>x.Name).HasMaxLength(100);
+  b.Entity<Menu>().Property(x=>x.Name).HasMaxLength(100);
+  b.Entity<Hall>().HasIndex(x=>x.Name).IsUnique();
+  b.Entity<Dish>().HasIndex(x=>x.Name).IsUnique();
+  b.Entity<Menu>().HasIndex(x=>x.Name).IsUnique();
+  b.Entity<Booking>().Property(x=>x.Status).IsConcurrencyToken();
+  b.Entity<Guest>().Property(x=>x.CheckedInAt).IsConcurrencyToken();
+  b.Entity<EmailChallenge>().HasKey(c=>c.Id);
+  b.Entity<EmailChallenge>().HasIndex(c=>new{c.UserId,c.CreatedUtc});
+  b.Entity<MenuItem>().HasKey(x=>new{x.MenuId,x.DishId});
+  b.Entity<MenuItem>().HasOne(x=>x.Menu).WithMany(x=>x.Items).HasForeignKey(x=>x.MenuId);
+  b.Entity<Reservation>().HasKey(x=>new{x.HallId,x.EventDate,x.Slot});
+  b.Entity<Reservation>().Property(x=>x.EventDate).HasMaxLength(10);
+  b.Entity<Reservation>().Property(x=>x.Slot).HasMaxLength(10);
+  b.Entity<Reservation>().HasIndex(x=>x.BookingId).IsUnique();
+  b.Entity<HallTable>().HasIndex(x=>new{x.HallId,x.Number}).IsUnique();
+  b.Entity<EventTable>().HasIndex(x=>new{x.BookingId,x.Number}).IsUnique();
+  b.Entity<Guest>().Property(x=>x.Token).HasMaxLength(64);
+  b.Entity<Guest>().HasIndex(x=>x.Token).IsUnique();
+  b.Entity<Payment>().HasIndex(x=>new{x.BookingId,x.Reference}).IsUnique();
+  b.Entity<Payment>().Property(x=>x.Reference).HasMaxLength(100);
+  b.Entity<WeddingPhoto>().HasKey(x=>x.Id);
+  b.Entity<WeddingPhoto>().Property(x=>x.Id).HasMaxLength(32);
+  b.Entity<WeddingPhoto>().Property(x=>x.FileName).HasMaxLength(200);
+  b.Entity<WeddingPhoto>().Property(x=>x.ContentType).HasMaxLength(30);
+  b.Entity<WeddingPhoto>().HasIndex(x=>x.BookingId);
+  b.Entity<Menu>().Property(x=>x.PricePerTable).HasPrecision(18,2);
+  b.Entity<Booking>().Property(x=>x.PricePerTable).HasPrecision(18,2);
+  b.Entity<Payment>().Property(x=>x.Amount).HasPrecision(18,2);
+  foreach(var fk in b.Model.GetEntityTypes().SelectMany(e=>e.GetForeignKeys()).Where(fk=>!fk.DeclaringEntityType.Name.Contains("Identity"))) fk.DeleteBehavior=DeleteBehavior.Restrict;
+ }
+}
